@@ -1,0 +1,4 @@
+site_name: djangorestframework-registration
+site_description: RESTful account registration, activation, and login
+repo_url: https://github.com/9gix/django-rest-framework-registration
+site_dir: html
