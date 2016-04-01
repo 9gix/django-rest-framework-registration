@@ -6,7 +6,15 @@ djangorestframework-registration
 Overview
 --------
 
-RESTful account registration, activation, and login
+RESTful account registration, activation. This apps is
+inspired by django-registration. It uses the same templates as the 
+django-registration. 
+
+This package is influenced by the django-registration HMAC workflow.
+
+Registration Endpoint is an rest framework APIView, 
+whereas Activation Endpoint is a django TemplateView.
+
 
 Requirements
 ------------
