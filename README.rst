@@ -19,9 +19,9 @@ whereas Activation Endpoint is a django TemplateView.
 Requirements
 ------------
 
--  Python (2.7, 3.3, 3.4)
--  Django (1.6, 1.7, 1.8)
--  Django REST Framework (2.4, 3.0, 3.1)
+-  Python (3.4)
+-  Django (1.8, 1.9)
+-  Django REST Framework (3.3)
 
 Installation
 ------------
@@ -35,7 +35,16 @@ Install using ``pip``\ …
 Example
 -------
 
-TODO: Write example.
+Include the following urls.
+
+.. code:: python
+
+    urlpatterns = [
+        url(r'^api-token-auth/', include('rest_framework_registration.urls')),
+    ]
+
+the available resources will be available at ``/api-token-auth/registrations/``
+and ``/api-token-auth/activations/<key>``. See the source code for more detail.
 
 Testing
 -------
