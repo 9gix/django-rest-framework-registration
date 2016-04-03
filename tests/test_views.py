@@ -10,8 +10,8 @@ User = get_user_model()
 REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT',
                             'rest_framework_registration')
 
-class RegistrationTestCase(TestCase):
 
+class RegistrationTestCase(TestCase):
     def setUp(self):
         self.registration_data = {
             User.USERNAME_FIELD: 'foo',
@@ -24,33 +24,35 @@ class RegistrationTestCase(TestCase):
         }
 
     def test_registration(self):
-        resp = self.client.post(reverse('registration_register'),
-                data=self.registration_data)
+        self.client.post(
+            reverse('registration_register'),
+            data=self.registration_data)
 
         new_user = User.objects.get(**self.lookup_kwargs)
         self.assertFalse(new_user.is_active)
         self.assertTrue(
-                new_user.check_password(self.registration_data['password']))
+            new_user.check_password(self.registration_data['password']))
 
         self.assertEqual(new_user.email, self.registration_data['email'])
         self.assertEqual(new_user.username, self.registration_data['username'])
 
-class ActivationWorkflowTestCase(RegistrationTestCase):
 
+class ActivationWorkflowTestCase(RegistrationTestCase):
     def test_activation(self):
-        resp = self.client.post(reverse('registration_register'),
-                data=self.registration_data)
+        self.client.post(
+            reverse('registration_register'),
+            data=self.registration_data)
 
         new_user = User.objects.get(**self.lookup_kwargs)
-        assert new_user.is_active == False
+        assert new_user.is_active is False
 
         activation_key = signing.dumps(
-                obj=self.registration_data[User.USERNAME_FIELD],
-                salt=REGISTRATION_SALT)
+            obj=self.registration_data[User.USERNAME_FIELD],
+            salt=REGISTRATION_SALT)
 
         resp = self.client.get(
             reverse('registration_activate',
-                kwargs={'activation_key': activation_key}))
+                    kwargs={'activation_key': activation_key}))
 
         self.assertRedirects(resp, reverse('registration_activation_complete'))
         self.assertTrue(User.objects.get(**self.lookup_kwargs).is_active)
