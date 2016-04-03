@@ -6,22 +6,18 @@ from django.contrib.auth import get_user_model
 from django.views import generic as dj_generic
 from django.shortcuts import redirect
 
-from rest_framework import views as drf_views
 from rest_framework import generics as drf_generics
-from rest_framework import mixins
-from rest_framework import response
-from rest_framework import status
-
-from registration.models import RegistrationProfile
 
 from . import serializers
 from . import signals
 
 
+ACCOUNT_ACTIVATION_DAYS = getattr(settings, 'ACCOUNT_ACTIVATION_DAYS', 7)
 REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT',
-    'rest_framework_registration')
+                            'rest_framework_registration')
 
 User = get_user_model()
+
 
 class RegistrationView(drf_generics.CreateAPIView):
 
@@ -33,13 +29,12 @@ class RegistrationView(drf_generics.CreateAPIView):
 
     def get_activation_key(self, user):
         return signing.dumps(getattr(user, User.USERNAME_FIELD),
-                salt=REGISTRATION_SALT)
+                             salt=REGISTRATION_SALT)
 
     def send_activation_email(self, user):
-        activation_key = self.get_activation_key(user)
         ctx = {
-            'activation_key':self.get_activation_key(user),
-            'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
+            'activation_key': self.get_activation_key(user),
+            'expiration_days': ACCOUNT_ACTIVATION_DAYS,
             'site': get_current_site(self.request),
             'user': user,
         }
@@ -56,8 +51,8 @@ class RegistrationView(drf_generics.CreateAPIView):
 
     def perform_create(self, serializer):
         user = self.create_inactive_user(serializer)
-        signals.user_registered.send(sender=self.__class__,
-                user=user, request=self.request)
+        signals.user_registered.send(sender=self.__class__, user=user,
+                                     request=self.request)
 
 
 class ActivationView(dj_generic.TemplateView):
@@ -66,8 +61,10 @@ class ActivationView(dj_generic.TemplateView):
     def get(self, request, *args, **kwargs):
         activated_user = self.activate(request, *args, **kwargs)
         if activated_user:
-            signals.user_activated.send(sender=self.__class__,
-                    user=activated_user, request=self.request)
+            signals.user_activated.send(
+                sender=self.__class__,
+                user=activated_user,
+                request=self.request)
             success_url = self.get_success_url(activated_user)
             try:
                 to, args, kwargs = success_url
@@ -76,10 +73,8 @@ class ActivationView(dj_generic.TemplateView):
                 return redirect(success_url)
         return super().get(request, *args, **kwargs)
 
-
     def get_success_url(self, user):
         return ('registration_activation_complete', (), {})
-
 
     def activate(self, request, *args, **kwargs):
         username = self.validate_key(kwargs.get('activation_key'))
@@ -98,14 +93,13 @@ class ActivationView(dj_generic.TemplateView):
         user.is_active = True
         user.save()
         return user
-        
 
     def validate_key(self, activation_key):
         try:
             username = signing.loads(
                 activation_key,
                 salt=REGISTRATION_SALT,
-                max_age=settings.ACCOUNT_ACTIVATION_DAYS * 86400)
+                max_age=ACCOUNT_ACTIVATION_DAYS * 86400)
         except signing.BadSignature:
             username = None
 
